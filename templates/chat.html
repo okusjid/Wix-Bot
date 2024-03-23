@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Controller</title>
+    <style>
+        /* Reset default styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Body styles */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* Container styles */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Heading styles */
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2rem;
+            color: #007bff;
+        }
+
+        /* Form styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 130px);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-right: 10px;
+            font-size: 1rem;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        /* Results styles */
+        .results {
+            margin-top: 20px;
+        }
+
+        .result-item {
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .result-item p {
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .result-item p strong {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        .result-item hr {
+            border: none;
+            border-top: 1px solid #ddd;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+
+        .result-image {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+
+        /* Hyperlink styles */
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Chat Controller</h1>
+    <div class="form-group">
+        <label for="query">Enter Query:</label>
+        <input type="text" id="query" name="query">
+        <button id="sendButton" onclick="sendQuery()">Send Query</button>
+    </div>
+    <div id="results" class="results">
+        <!-- Previous and new results will be displayed here -->
+    </div>
+
+    <script>
+        async function sendQuery() {
+            try {
+                const query = document.getElementById('query').value;
+                if (!query) {
+                    alert('Please enter a query.');
+                    return;
+                }
+                document.getElementById('sendButton').disabled = true; // Disable button
+                displayQuery(query); // Display the query first
+                const response = await fetch('https://4d85-2400-adc5-150-800-751d-b3a4-e4a6-38ea.ngrok-free.app/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ query })
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch data');
+                }
+                const data = await response.json();
+                if (data.length === 0) {
+                    throw new Error('No results found');
+                }
+                displayResults(data); // Then display the results
+            } catch (error) {
+                console.error('Error fetching or displaying data:', error);
+                alert('An error occurred. Please try again.');
+            } finally {
+                document.getElementById('sendButton').disabled = false; // Re-enable button
+                document.getElementById('query').value = ''; // Clear input field
+            }
+        }
+
+        // Function to display results
+        function displayResults(results) {
+            const resultsDiv = document.getElementById('results');
+            // Loop through each result
+            results.forEach(result => {
+                // Create a div element for each result
+                const resultDiv = document.createElement('div');
+                resultDiv.classList.add('result-item');
+                // Set the inner HTML of the result div
+                resultDiv.innerHTML = `
+                <p><strong>Query:</strong> ${result.query}</p>
+                <p><strong>Title:</strong> ${result.title}</p>
+                <p><strong>Description:</strong> ${result.description}</p>
+                <p><strong>Address:</strong> ${result.address}</p>
+                <p><strong>Categories:</strong> ${result.categories}</p>
+                <p><strong>Website:</strong> <a href="${result.website}" target="_blank">${result.website}</a></p>
+                <img src="${result.image}" alt="Image" class="result-image">
+                <hr>
+            `;
+                // Append the result div to the results container
+                resultsDiv.appendChild(resultDiv);
+            });
+        }
+
+        // Function to display the entered query
+        function displayQuery(query) {
+            const resultsDiv = document.getElementById('results');
+            const queryDiv = document.createElement('div');
+            queryDiv.classList.add('result-item');
+            queryDiv.innerHTML = `
+                <p><strong>Query:</strong> ${query}</p>
+                <hr>
+            `;
+            resultsDiv.appendChild(queryDiv);
+        }
+    </script>
+
+</body>
+
+</html>
